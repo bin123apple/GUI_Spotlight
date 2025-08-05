@@ -4,7 +4,6 @@ import ast
 import base64
 import inspect
 
-from datasets import Dataset
 from PIL import Image
 from transformers import PreTrainedModel
 from typing import Callable, Dict, Union, Any, List
@@ -85,8 +84,6 @@ def format_tool_descriptions(schemas: List[Dict[str, Any]]) -> str:
 
 class ToolEnv(MultiTurnEnv):
     def __init__(self,
-                 dataset: Dataset | None = None,
-                 eval_dataset: Dataset | None = None,
                  tools: List[Callable] = [],
                  few_shot: List[Dict[str, str]] = [],
                  llm_fields: List[str | tuple[str, str]] = [("crop", "answer", "find_color", "extract")],
@@ -102,15 +99,12 @@ class ToolEnv(MultiTurnEnv):
         self.tools = {tool.__name__: tool for tool in tools}
         
         super().__init__(
-            dataset=dataset,
-            eval_dataset=eval_dataset,
             few_shot=few_shot,
             mask_env_response=mask_env_response,
             max_steps=max_steps,
             sampling_args=sampling_args,
             **kwargs
         )
-        self.dataset_name = dataset
         self.max_steps = max_steps
         self.llm_parser = XMLParser(fields=llm_fields)
         self.env_parser = XMLParser(fields=env_fields)

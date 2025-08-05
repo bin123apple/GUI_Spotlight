@@ -13,6 +13,7 @@ from spotlight.tools_envs.tool_env import ToolEnv
 from vllm import LLM, SamplingParams
 from spotlight.parser import XMLParser
 from datasets import Dataset, load_from_disk, load_dataset
+from huggingface_hub import snapshot_download
 from typing import List, Dict, Any, Tuple
 
 SYSTEM_PROMPT = """Your goal is to accurately provide a coordinate point based on the user’s description and the initial image they supplied. 
@@ -71,7 +72,7 @@ Now, let's work on the real task:
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_name', type=str, default="Bin12345/qwen2_5vl_ui-tars-7b_2561sp_1_ep_sft_1_beta_0_ep_NaNa_grad16_cpkt-400_sft_0.1_100_sft_0.1_100_h", help="Path to the pretrained model")
-    parser.add_argument('--dataset_name', type=str, default="Bin12345/screenspot_pro_arrow_format", help="Dataset path")
+    parser.add_argument('--dataset_name', type=str, default="likaixin/ScreenSpot-Pro", help="Dataset path")
     return parser.parse_args()
 
 PLACEHOLDER = "<IMAGE>"
@@ -375,7 +376,7 @@ class OSS_LLM:
             self.oss_llm = LLM(
                 model=self.model,
                 tokenizer=self.model,
-                tensor_parallel_size=1,
+                tensor_parallel_size=2,
                 gpu_memory_utilization=0.95,
                 enforce_eager=True,
                 max_model_len=30000,
@@ -433,21 +434,54 @@ def save_case_analysis(batch_num, case_num, original_img, cropped_imgs, final_cl
         draw.ellipse((final_click[0]-5, final_click[1]-5, final_click[0]+5, final_click[1]+5), fill="red")
     marked_img.save(case_dir / "marked.png")
 
+def _derive_application(case: Dict[str, Any]) -> str:
+    app = case.get("application")
+    if isinstance(app, str) and app:
+        return app
+    img_fn = case.get("img_filename", "")
+    cls = img_fn.split("/")[0] if "/" in img_fn else img_fn
+    if not cls:
+        return "unknown"
+    return cls.rsplit("_", 1)[0] if "_" in cls else cls
+
+
+def _print_per_app(prefix: str, total_map: Dict[str, int], correct_map: Dict[str, int]) -> None:
+    if not total_map:
+        print(f"{prefix}: (no data)")
+        return
+    parts = []
+    for app in sorted(total_map.keys()):
+        tot = total_map.get(app, 0)
+        cor = correct_map.get(app, 0)
+        acc = (cor / tot) if tot else 0.0
+        parts.append(f"{app}: {acc:.2%} ({cor}/{tot})")
+    print(f"{prefix}: " + " | ".join(parts))
 
 def main(multiturn_tools: bool = True):
     args = parse_args()
     dataset_name = args.dataset_name if hasattr(args, 'dataset_name') else None
     try:
         # dataset = load_processed_dataset(dataset_name)
-        dataset = load_dataset(dataset_name)['train']
+        dataset = load_dataset(
+            "json",
+            data_files=f"hf://datasets/{dataset_name}/annotations/*.json",
+            split="train",
+        )
+        repo_dir = snapshot_download(
+            repo_id="likaixin/ScreenSpot-Pro",
+            repo_type="dataset",
+            allow_patterns=["images/*/*.png"],   # 只下 PNG
+            local_dir="./ScreenSpot-Pro",
+            local_dir_use_symlinks=False,
+        )
         print(f"The size of the dataset: {len(dataset)}")
+        print(f'dataset: {dataset}')
+        print(f'dataset example: {dataset[0]}')
     except Exception as e:
         print(f"Fail to load the dataset: {e}")
         return
 
     tool_env = ToolEnv(
-        dataset=dataset,
-        eval_dataset=None,
         system_prompt=SYSTEM_PROMPT,
         few_shot=[],
         tools=[crop],
@@ -478,14 +512,21 @@ def main(multiturn_tools: bool = True):
     batch_size = 64
     total_correct = 0
     batch_correct_list = []
+    application_total   = {}  # {app: seen_count}
+    application_correct = {}  # {app: correct_count}
 
     for start in range(0, len(dataset), batch_size):
         end = min(start + batch_size, len(dataset))
         batch = dataset.select(range(start, end))
-
-        prompts = batch["question"]
-        answers = batch["answer"] if "answer" in batch.column_names else None
-        images = [Image.open(io.BytesIO(b)).convert("RGB") for b in batch["image"]]
+        
+        prompts = [case["instruction"] for case in batch]
+        answers = [case["bbox"] for case in batch]
+        image_folder_paths = [case['img_filename'] for case in batch]
+        
+        images = [None] * len(image_folder_paths)
+        for i in range(len(image_folder_paths)):
+            images[i] = f'./ScreenSpot-Pro/images/{image_folder_paths[i]}' 
+        images = [Image.open(image).convert("RGB") for image in images]
 
         multimodal_inputs = _prepare_multimodal_chat_template(prompts, images)
         env_result = tool_env.generate(
@@ -510,6 +551,34 @@ def main(multiturn_tools: bool = True):
         batch_correct_list.append(good_cnt)
         
         print(f"Batch {start//batch_size:4d}: kept {good_cnt}/{len(batch)}")
+        
+        # === 本 batch 的 per-app 统计（显式 dict） ===
+        batch_app_total: Dict[str, int] = {}
+        batch_app_correct: Dict[str, int] = {}
+
+        for idx, reward in enumerate(rewards):
+            app = _derive_application(batch[idx])  # 从 application 或 img_filename 推断
+            # 累计容器初始化
+            if app not in application_total:
+                application_total[app] = 0
+                application_correct[app] = 0
+            if app not in batch_app_total:
+                batch_app_total[app] = 0
+                batch_app_correct[app] = 0
+
+            # 累计 + 本批
+            application_total[app] += 1
+            batch_app_total[app] += 1
+            if reward == 1:
+                application_correct[app] += 1
+                batch_app_correct[app] += 1
+
+        # === 每个 batch 结束后：打印累计/当批 per-app 准确率 ===
+        seen_so_far = (start + len(batch))
+        overall_acc_so_far = total_correct / seen_so_far if seen_so_far else 0.0
+        print(f"[Progress] Overall so far: {overall_acc_so_far:.2%} ({total_correct}/{seen_so_far})")
+        _print_per_app("[Cumulative per-application]", application_total, application_correct)
+        _print_per_app("[This-batch  per-application]", batch_app_total, batch_app_correct)
         
         # Save analysis for correct and wrong cases
         for case_type, predicate in [("correct", lambda r: r == 1),

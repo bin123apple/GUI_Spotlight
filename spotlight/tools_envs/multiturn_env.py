@@ -14,8 +14,6 @@ from typing import List, Dict, Sequence, Any, Union
 
 class MultiTurnEnv(Environment):
     def __init__(self,
-                 dataset: Dataset | None = None,
-                 eval_dataset: Dataset | None = None,
                  few_shot: List[Dict[str, str]] = [],
                  sampling_args: Dict[str, Any] = {},
                  mask_env_response: bool = True,
@@ -25,8 +23,6 @@ class MultiTurnEnv(Environment):
                  **kwargs):
         super().__init__(**kwargs)
         self.few_shot = few_shot
-        self.dataset = dataset
-        self.eval_dataset = eval_dataset
         self.sampling_args = {
             "skip_special_tokens": False,
             "spaces_between_special_tokens": False,
