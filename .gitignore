@@ -1,0 +1,26 @@
+# tests
+tests/
+
+# wandb
+wandb/
+
+# .log
+*.log
+logs/
+
+# backup images
+backup_images/
+
+# .egg
+GUI_Spotlight.egg-info/
+
+# .output models
+outputs/
+
+# .debug folder
+debug/
+
+# Python related
+__pycache__/
+*.py[cod]
+*.pyo
