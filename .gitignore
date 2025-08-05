@@ -24,3 +24,6 @@ debug/
 __pycache__/
 *.py[cod]
 *.pyo
+
+# dataset
+ScreenSpot-Pro/
