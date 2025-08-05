@@ -12,7 +12,7 @@ from PIL import Image, ImageDraw
 from spotlight.tools_envs.tool_env import ToolEnv
 from vllm import LLM, SamplingParams
 from spotlight.parser import XMLParser
-from datasets import Dataset, load_from_disk
+from datasets import Dataset, load_from_disk, load_dataset
 from typing import List, Dict, Any, Tuple
 
 SYSTEM_PROMPT = """Your goal is to accurately provide a coordinate point based on the user’s description and the initial image they supplied. 
@@ -70,7 +70,8 @@ Now, let's work on the real task:
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_name', type=str, default="/mnt/data1/home/lei00126/AgentTrainer/outputs/VG-grpo_qwen2_5vl_ui-tars-7b_2561_samples_1_epoch_rl/checkpoint-100", help="Path to the pretrained model")
+    parser.add_argument('--model_name', type=str, default="Bin12345/qwen2_5vl_ui-tars-7b_2561sp_1_ep_sft_1_beta_0_ep_NaNa_grad16_cpkt-400_sft_0.1_100_sft_0.1_100_h", help="Path to the pretrained model")
+    parser.add_argument('--dataset_name', type=str, default="Bin12345/screenspot_pro_arrow_format", help="Dataset path")
     return parser.parse_args()
 
 PLACEHOLDER = "<IMAGE>"
@@ -374,7 +375,7 @@ class OSS_LLM:
             self.oss_llm = LLM(
                 model=self.model,
                 tokenizer=self.model,
-                tensor_parallel_size=4,
+                tensor_parallel_size=1,
                 gpu_memory_utilization=0.95,
                 enforce_eager=True,
                 max_model_len=30000,
@@ -434,9 +435,11 @@ def save_case_analysis(batch_num, case_num, original_img, cropped_imgs, final_cl
 
 
 def main(multiturn_tools: bool = True):
+    args = parse_args()
+    dataset_name = args.dataset_name if hasattr(args, 'dataset_name') else None
     try:
-        PROCESSED_DATA_PATH = "/mnt/data1/home/lei00126/datasets/screenspot_arrow"
-        dataset = load_processed_dataset(PROCESSED_DATA_PATH)
+        # dataset = load_processed_dataset(dataset_name)
+        dataset = load_dataset(dataset_name)['train']
         print(f"The size of the dataset: {len(dataset)}")
     except Exception as e:
         print(f"Fail to load the dataset: {e}")
@@ -451,7 +454,6 @@ def main(multiturn_tools: bool = True):
         max_steps=5
     )
 
-    args = parse_args()
     model_name = args.model_name if hasattr(args, 'model_name') else "model_results"
     model_name = model_name.split("/")[-1]
 

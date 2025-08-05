@@ -12,6 +12,8 @@ dependencies = [
     "torch==2.6.0",
     "setuptools",
     "vllm>=0.8.5.post1",
+    "matplotlib",
+    "datasets"
 ]
 
 [tool.setuptools]

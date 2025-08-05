@@ -9,3 +9,9 @@ conda activate spotlight
 conda install -c conda-forge uv
 uv pip install -e .
 ```
+
+## Evaluation
+
+```
+python screenspot_pro_evaluation.py
+```

@@ -11,7 +11,7 @@ from typing import Callable, Dict, Union, Any, List
 RewardFunc = Union[str, PreTrainedModel, Callable[[list, list], list[float]]]
 from spotlight.tools import crop, extract, find_color
 from spotlight.tools_envs.multiturn_env import MultiTurnEnv
-from spotlight.parsers import XMLParser
+from spotlight.parser import XMLParser
 from spotlight.reward.tool_rubric import ToolRubric
 
 def infer_schema_from_function(func: Callable) -> Dict[str, Any]:
