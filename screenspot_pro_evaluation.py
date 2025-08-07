@@ -71,7 +71,7 @@ Now, let's work on the real task:
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_name', type=str, default="Bin12345/qwen2_5vl_ui-tars-7b_2561sp_1_ep_sft_1_beta_0_ep_NaNa_grad16_cpkt-400_sft_0.1_100_sft_0.1_120_h", help="Path to the pretrained model")
+    parser.add_argument('--model_name', type=str, default="/mnt/data1/home/lei00126/AgentTrainer/outputs/VG-grpo_qwen2_5vl_ui-tars-7b_2561_samples_1_epoch_rl/checkpoint-120", help="Path to the pretrained model")
     parser.add_argument('--dataset_name', type=str, default="likaixin/ScreenSpot-Pro", help="Dataset path")
     return parser.parse_args()
 

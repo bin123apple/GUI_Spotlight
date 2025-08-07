@@ -13,7 +13,7 @@ dependencies = [
     "setuptools",
     "vllm>=0.8.5.post1",
     "matplotlib",
-    "datasets"
+    "datasets==4.0.0"
 ]
 
 [tool.setuptools]

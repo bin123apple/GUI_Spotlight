@@ -15,3 +15,9 @@ uv pip install -e .
 ```
 python screenspot_pro_evaluation.py
 ```
+
+## Inference
+
+```
+python inference.py --prompt `Your prompt` --image_path `Image Path` --model `The name of the model`
+```
