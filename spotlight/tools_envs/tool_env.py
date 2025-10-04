@@ -138,7 +138,7 @@ class ToolEnv(MultiTurnEnv):
         try:
             # Check if we've hit max steps by counting tool uses in the message history
             step_count = self._get_step_count(messages)
-            if step_count > self.max_steps:
+            if step_count >= self.max_steps:
                 return True
             
             parsed = self.llm_parser.parse(messages[-1]["content"][0]["text"])
