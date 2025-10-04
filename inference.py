@@ -651,7 +651,7 @@ def step(states: List[Dict[str, Any]], llm: LLM, sampling_params: SamplingParams
     live_indices = [i for i, s in enumerate(states) if not s["completed"]]
     messages_to_step = [states[i]["messages"] for i in live_indices]
     llm_responses = llm.chat(messages_to_step, sampling_params=sampling_params, use_tqdm=True) # type: ignore
-    
+
     def update_state(j, llm_response):
         """
         Update three things in the state:
