@@ -91,7 +91,7 @@ Now, let's work on the real task:
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_name', type=str, default="Bin12345/qwen2_5vl_ui-tars_stage4_ckpt_50", help="Path to the pretrained model")
+    parser.add_argument('--model_name', type=str, default="Bin12345/GUI-Spotlight", help="Path to the pretrained model")
     parser.add_argument('--dataset_name', type=str, default="likaixin/ScreenSpot-Pro", help="Dataset path")
     return parser.parse_args()
 
