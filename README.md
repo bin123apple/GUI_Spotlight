@@ -10,6 +10,20 @@
   GUI-Spotlight: Adaptive Iterative Focus Refinement for Enhanced GUI Visual Grounding.
 </h1>
 
+<a href="https://huggingface.co/Bin12345/GUI-Spotlight">
+  <img
+    src="https://img.shields.io/badge/HuggingFace-Model-yellow?logo=huggingface&logoColor=white&style=for-the-badge"
+    alt="Hugging Face Model"
+  />
+</a>
+
+<a href="https://huggingface.co/datasets/nuoxu1993/VG-RL-filter-dataset-hf">
+  <img
+    src="https://img.shields.io/badge/HuggingFace-Dataset-orange?logo=huggingface&logoColor=white&style=for-the-badge"
+    alt="Hugging Face Dataset"
+  />
+</a>
+
 </div>
 
 ## Introduction
