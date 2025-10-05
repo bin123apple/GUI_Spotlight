@@ -27,7 +27,7 @@
 </div>
 
 ## Introduction
-GUI_Spotlight is a `think-with-image` model. For each step, it first calls tooling to crop the image according to its own predictions, and then returns an exact coordinate location.
+GUI_Spotlight is a `think-with-image` GUI visual grounding model. For each step, it first calls tooling to crop the image according to its own predictions, and then returns an exact coordinate location.
 
 ## Setup
 
