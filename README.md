@@ -49,7 +49,7 @@ python screenspot_pro_evaluation.py
 **OSWorld-G** (Need to download the dataset by yourself)
 ```
 python osworld_g_evaluation.py \
-  --model  \
+  --model Bin12345/GUI-Spotlight \
   --dataset_json OSWorld-G_refined.json \
   --images_dir OSWorld-G/benchmark/images \
   --batch_size 1
@@ -58,7 +58,7 @@ python osworld_g_evaluation.py \
 **UI-Vision** (Need to download the dataset by yourself)
 ```
 python uivision_evaluation.py \
-  --model  \
+  --model Bin12345/GUI-Spotlight \
   --dataset_json `uivision/annotations` \
   --images_dir `ui-vision/images` \
   --batch_size 1
