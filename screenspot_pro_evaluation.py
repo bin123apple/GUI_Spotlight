@@ -68,10 +68,30 @@ Here is an example of how to find the final target coordinate:
 Now, let's work on the real task:
 [Image_0 is displayed below]"""
 
+EXTRACT_TOOL_EXAMPLE = '''User: [Image_0 is displayed above] Could you identify the location of the “Close” button in this interface?
+
+Assistant: <think>I’d like to zoom in on the menu icon at the top-left corner to get a clearer view.</think>  
+<extract>(Image_0, left, top)</extract>
+
+User: [Image_1 is displayed above]  # (possible area returned)
+
+Assistant: <think>In this cropped image, I can see the approximate position of the “Close” button—it sits near the center of the region, slightly toward the lower-right. it’s at (45, 60).</think>  
+<answer>(Image_1, (45, 60))</answer>'''
+
+EXTRACT_TOOL_PROMPT = f"""You should use the **extract** tool to help you analyze the image and find the target coordinate:
+This tool allows you to extract one quarter of the image based on the specified horizontal and vertical positions (left, center, right for x-axis; top, center, bottom for y-axis).
+Before each tool call, please enclose your reasoning within <think>...</think> tags.
+In the end, you should return your final answer using the <answer>...</answer> tag.
+In the <answer> tag, you should return the image and the coordinate of the target object in the format (Image_X, (x, y)), where Image_X is the image containing the target object and (x, y) is the coordinate of the target object.
+Here is an example of how to find the final target coordinate:
+{EXTRACT_TOOL_EXAMPLE}
+Now, let's work on the real task:
+[Image_0 is displayed below]"""
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_name', type=str, default="/mnt/data1/home/lei00126/AgentTrainer/outputs/VG-grpo_qwen2_5vl_ui-tars-7b_2561_samples_1_epoch_rl/checkpoint-120", help="Path to the pretrained model")
+    parser.add_argument('--model_name', type=str, default="Bin12345/qwen2_5vl_ui-tars_stage4_ckpt_50", help="Path to the pretrained model")
     parser.add_argument('--dataset_name', type=str, default="likaixin/ScreenSpot-Pro", help="Dataset path")
     return parser.parse_args()
 
@@ -470,7 +490,7 @@ def main(multiturn_tools: bool = True):
         repo_dir = snapshot_download(
             repo_id="likaixin/ScreenSpot-Pro",
             repo_type="dataset",
-            allow_patterns=["images/*/*.png"],   # 只下 PNG
+            allow_patterns=["images/*/*.png"],
             local_dir="./ScreenSpot-Pro",
             local_dir_use_symlinks=False,
         )
@@ -552,13 +572,12 @@ def main(multiturn_tools: bool = True):
         
         print(f"Batch {start//batch_size:4d}: kept {good_cnt}/{len(batch)}")
         
-        # === 本 batch 的 per-app 统计（显式 dict） ===
         batch_app_total: Dict[str, int] = {}
         batch_app_correct: Dict[str, int] = {}
 
         for idx, reward in enumerate(rewards):
-            app = _derive_application(batch[idx])  # 从 application 或 img_filename 推断
-            # 累计容器初始化
+            app = _derive_application(batch[idx])
+
             if app not in application_total:
                 application_total[app] = 0
                 application_correct[app] = 0
@@ -566,14 +585,12 @@ def main(multiturn_tools: bool = True):
                 batch_app_total[app] = 0
                 batch_app_correct[app] = 0
 
-            # 累计 + 本批
             application_total[app] += 1
             batch_app_total[app] += 1
             if reward == 1:
                 application_correct[app] += 1
                 batch_app_correct[app] += 1
 
-        # === 每个 batch 结束后：打印累计/当批 per-app 准确率 ===
         seen_so_far = (start + len(batch))
         overall_acc_so_far = total_correct / seen_so_far if seen_so_far else 0.0
         print(f"[Progress] Overall so far: {overall_acc_so_far:.2%} ({total_correct}/{seen_so_far})")
