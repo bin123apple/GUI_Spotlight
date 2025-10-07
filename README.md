@@ -10,6 +10,13 @@
   GUI-Spotlight: Adaptive Iterative Focus Refinement for Enhanced GUI Visual Grounding.
 </h1>
 
+<a href="https://arxiv.org/abs/2510.04039">
+  <img
+    src="https://img.shields.io/badge/arXiv-Paper-red?logo=arxiv&logoColor=white&style=for-the-badge"
+    alt="Paper"
+  />
+</a>
+
 <a href="https://huggingface.co/Bin12345/GUI-Spotlight">
   <img
     src="https://img.shields.io/badge/HuggingFace-Model-yellow?logo=huggingface&logoColor=white&style=for-the-badge"
